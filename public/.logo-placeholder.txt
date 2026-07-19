@@ -1,0 +1,17 @@
+📍 Placez votre fichier logo.png ici
+
+Spécifications recommandées :
+- Nom du fichier : logo.png
+- Format : PNG avec transparence
+- Dimensions : 200x200px minimum (carré ou légèrement rectangulaire)
+- Poids : < 100KB
+- Fond : Transparent de préférence
+
+Le logo sera utilisé dans :
+1. Page d'accueil (header)
+2. Sidebar de l'application
+3. Header des pages authentifiées
+4. Favicon (après conversion)
+5. En-têtes des exports Excel
+
+Une fois placé, supprimez ce fichier .logo-placeholder.txt

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateur de Favicon - Zouane Conventions</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #B3191F;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .upload-zone {
+            border: 3px dashed #B3191F;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #fff5f5;
+        }
+        
+        .upload-zone:hover {
+            border-color: #8E1418;
+            background: #ffe5e5;
+        }
+        
+        .upload-zone.dragover {
+            background: #ffd5d5;
+            border-color: #8E1418;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        
+        .preview-container {
+            display: none;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .preview-container.active {
+            display: block;
+        }
+        
+        canvas {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin: 10px;
+            background: white;
+        }
+        
+        .preview-grid {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .preview-item {
+            text-align: center;
+        }
+        
+        .preview-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        button {
+            background: #B3191F;
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background: #8E1418;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(179, 25, 31, 0.3);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .instructions {
+            background: #f8f9fa;
+            border-left: 4px solid #B3191F;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .instructions h3 {
+            color: #B3191F;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .instructions ol {
+            margin-left: 20px;
+        }
+        
+        .instructions li {
+            margin: 5px 0;
+        }
+        
+        .success-message {
+            display: none;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .success-message.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Générateur de Favicon</h1>
+        <p class="subtitle">Zouane Conventions - Convertissez votre logo en favicon</p>
+        
+        <div class="upload-zone" id="uploadZone">
+            <div class="upload-icon">📁</div>
+            <h3>Glissez-déposez votre logo.png ici</h3>
+            <p>ou cliquez pour sélectionner</p>
+            <input type="file" id="fileInput" accept="image/png,image/jpeg,image/jpg">
+        </div>
+        
+        <div class="preview-container" id="previewContainer">
+            <h3>Aperçu du Favicon</h3>
+            <div class="preview-grid">
+                <div class="preview-item">
+                    <canvas id="canvas16" width="16" height="16"></canvas>
+                    <div class="preview-label">16×16px</div>
+                </div>
+                <div class="preview-item">
+                    <canvas id="canvas32" width="32" height="32"></canvas>
+                    <div class="preview-label">32×32px</div>
+                </div>
+                <div class="preview-item">
+                    <canvas id="canvas48" width="48" height="48"></canvas>
+                    <div class="preview-label">48×48px</div>
+                </div>
+            </div>
+            
+            <button id="downloadBtn" disabled>📥 Télécharger favicon.ico</button>
+        </div>
+        
+        <div class="success-message" id="successMessage">
+            ✅ Favicon téléchargé ! Placez-le dans le dossier <strong>public/</strong> de votre projet.
+        </div>
+        
+        <div class="instructions">
+            <h3>📋 Instructions</h3>
+            <ol>
+                <li>Sélectionnez votre fichier <strong>logo.png</strong></li>
+                <li>Vérifiez l'aperçu du favicon en différentes tailles</li>
+                <li>Cliquez sur "Télécharger favicon.ico"</li>
+                <li>Placez le fichier dans <code>public/favicon.ico</code></li>
+                <li>Redémarrez votre serveur de développement</li>
+            </ol>
+            <p style="margin-top: 10px; color: #666;">
+                <strong>Note:</strong> Ce générateur crée un favicon de base. Pour un favicon professionnel multi-plateforme 
+                (iOS, Android, Windows), utilisez <a href="https://realfavicongenerator.net/" target="_blank" style="color: #B3191F;">realfavicongenerator.net</a>
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const successMessage = document.getElementById('successMessage');
+        
+        let currentImage = null;
+        
+        // Click to upload
+        uploadZone.addEventListener('click', () => fileInput.click());
+        
+        // Drag & Drop
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+        
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+        
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                handleFile(file);
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handleFile(file);
+        });
+        
+        function handleFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    currentImage = img;
+                    renderPreviews();
+                    previewContainer.classList.add('active');
+                    downloadBtn.disabled = false;
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        function renderPreviews() {
+            [16, 32, 48].forEach(size => {
+                const canvas = document.getElementById(`canvas${size}`);
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, size, size);
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.drawImage(currentImage, 0, 0, size, size);
+            });
+        }
+        
+        downloadBtn.addEventListener('click', () => {
+            // Create ICO file (simplified - just use 32x32 PNG)
+            const canvas = document.getElementById('canvas32');
+            canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'favicon.ico';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                successMessage.classList.add('active');
+                setTimeout(() => {
+                    successMessage.classList.remove('active');
+                }, 5000);
+            }, 'image/x-icon');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+╔═══════════════════════════════════════════════════════════════╗
+║       🎯 GÉNÉRATION FAVICON - MÉTHODE LA PLUS RAPIDE          ║
+╚═══════════════════════════════════════════════════════════════╝
+
+📁 ÉTAPE 1 : Ouvrez ce fichier dans votre navigateur
+   └─ scripts/favicon-helper.html
+
+🖼️ ÉTAPE 2 : Glissez-déposez votre logo.png
+
+👀 ÉTAPE 3 : Vérifiez l'aperçu
+
+⬇️ ÉTAPE 4 : Cliquez "Télécharger favicon.ico"
+
+📂 ÉTAPE 5 : Placez le fichier dans public/favicon.ico
+
+🔄 ÉTAPE 6 : Redémarrez le serveur (bun run dev)
+
+✅ TERMINÉ !
+
+═══════════════════════════════════════════════════════════════
+
+📚 Pour plus d'options : Voir FAVICON-GUIDE.md
+
+🌐 Version professionnelle : https://realfavicongenerator.net/
+
+═══════════════════════════════════════════════════════════════
