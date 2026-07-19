@@ -76,9 +76,22 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  let supabaseUrl = "";
+  let supabaseKey = "";
+  if (typeof process !== "undefined" && process.env.SUPABASE_URL) {
+    supabaseUrl = process.env.SUPABASE_URL;
+    supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY || "";
+  }
   return (
     <html lang="fr">
-      <head><HeadContent /></head>
+      <head>
+        <HeadContent />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.__SUPABASE_ENV=window.__SUPABASE_ENV||${JSON.stringify({ SUPABASE_URL: supabaseUrl, SUPABASE_PUBLISHABLE_KEY: supabaseKey })};`,
+          }}
+        />
+      </head>
       <body>
         {children}
         <Scripts />
