@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -23,10 +23,26 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthedLayout() {
   const { session, loading, user, profile, role, signOut } = useAuth();
   const navigate = useNavigate();
+  const lastScrollY = useRef(0);
+  const [headerHidden, setHeaderHidden] = useState(false);
 
   useEffect(() => {
     if (!loading && !session) navigate({ to: "/auth", replace: true });
   }, [loading, session, navigate]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const sy = window.scrollY;
+      if (sy > 60 && sy > lastScrollY.current + 10) {
+        setHeaderHidden(true);
+      } else if (sy < lastScrollY.current - 10 || sy < 60) {
+        setHeaderHidden(false);
+      }
+      lastScrollY.current = sy;
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   if (loading || !session) {
     return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Chargement…</div>;
@@ -46,7 +62,11 @@ function AuthedLayout() {
           <AppSidebar />
         </div>
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="no-print flex h-14 items-center gap-3 border-b bg-card px-4">
+          <header
+            className={`no-print fixed inset-x-0 top-0 z-50 flex h-14 items-center gap-3 border-b bg-card px-4 transition-transform duration-300 md:static md:translate-y-0 ${
+              headerHidden ? "-translate-y-full" : "translate-y-0"
+            }`}
+          >
             <div className="hidden md:block"><SidebarTrigger /></div>
             <img src="/logo.jpg" alt="Logo" className="h-7 w-auto object-contain" />
             <div className="font-semibold tracking-tight">Zouane Conventions</div>
@@ -83,7 +103,7 @@ function AuthedLayout() {
               </DropdownMenu>
             </div>
           </header>
-          <main className="flex-1 bg-background pb-24 md:pb-0">
+          <main className="flex-1 bg-background pt-14 md:pt-0 pb-24 md:pb-0">
             <Outlet />
           </main>
         </div>

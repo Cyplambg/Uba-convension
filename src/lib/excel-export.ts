@@ -28,6 +28,22 @@ export async function imageToBase64(imagePath: string): Promise<string | null> {
   }
 }
 
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
+function workbookToBlob(wb: XLSX.WorkBook): Blob {
+  const data = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+  return new Blob([data], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+}
+
 export function exportAgencyYear(opts: {
   agencyName: string;
   agencyCode?: string;
@@ -84,7 +100,7 @@ export function exportAgencyYear(opts: {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, `${year}`);
   const filename = `Conventions_${agencyName.replace(/\s+/g, "_")}_${year}.xlsx`;
-  XLSX.writeFile(wb, filename);
+  downloadBlob(workbookToBlob(wb), filename);
 }
 
 export interface AgencyYearData {
@@ -173,6 +189,6 @@ export function exportAnnualReport(opts: { year: number; agencies: AgencyYearDat
     XLSX.utils.book_append_sheet(wb, ws, sheetName || `Agence`);
   }
 
-  XLSX.writeFile(wb, `Bilan_Annuel_${year}.xlsx`);
+  downloadBlob(workbookToBlob(wb), `Bilan_Annuel_${year}.xlsx`);
 }
 

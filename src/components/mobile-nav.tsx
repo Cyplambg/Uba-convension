@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { LayoutDashboard, PencilLine, Building2, BarChart3, Table, Users, MoreHorizontal, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
@@ -8,6 +8,22 @@ export function MobileNav() {
   const { role } = useAuth();
   const path = useRouterState({ select: (r) => r.location.pathname });
   const [expanded, setExpanded] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const sy = window.scrollY;
+      if (sy > 100 && sy > lastScrollY.current + 10) {
+        setHidden(true);
+      } else if (sy < lastScrollY.current - 10 || sy < 100) {
+        setHidden(false);
+      }
+      lastScrollY.current = sy;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const primary = [
     { url: "/dashboard", icon: LayoutDashboard, label: "Tableau" },
@@ -25,7 +41,12 @@ export function MobileNav() {
   const items = expanded ? [...primary, ...admin] : primary;
 
   return (
-    <nav className="no-print pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-4 md:hidden">
+    <nav
+      className={cn(
+        "no-print pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-4 transition-all duration-300 md:hidden",
+        hidden ? "translate-y-20 opacity-0" : "translate-y-0 opacity-100",
+      )}
+    >
       <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-white/10 bg-neutral-900/90 px-2 py-2 shadow-2xl backdrop-blur-xl">
         {items.map((it) => {
           const active = path === it.url;
