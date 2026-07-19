@@ -1,0 +1,80 @@
+╔═══════════════════════════════════════════════════════════════╗
+║       🚀 PUSH LOGO VERS GITHUB - MÉTHODE LA PLUS RAPIDE      ║
+╚═══════════════════════════════════════════════════════════════╝
+
+⚡ OPTION 1 : Script Automatique (1 commande)
+═══════════════════════════════════════════════════════════════
+
+Ouvrez PowerShell dans ce dossier et exécutez :
+
+   .\push-logo.ps1
+
+Le script va :
+✅ Ajouter tous les fichiers modifiés (logo, code, documentation)
+✅ Créer un commit descriptif
+✅ Pusher vers GitHub
+✅ Ouvrir GitHub dans le navigateur
+
+═══════════════════════════════════════════════════════════════
+
+📋 OPTION 2 : Commandes Manuelles
+═══════════════════════════════════════════════════════════════
+
+Copiez-collez toutes ces commandes d'un coup :
+
+cd "c:\Users\PLC\Downloads\lovable-2f588b4d (1)"
+
+git remote add origin https://github.com/Cyplambg/Uba-convension.git
+
+git add src/routes/index.tsx
+git add src/components/app-sidebar.tsx
+git add src/routes/_authenticated/route.tsx
+git add src/lib/excel-export.ts
+git add public/logo.jpg
+git add public/favicon.ico
+git add LOGO-*.md
+git add FAVICON-*.md
+git add FAVICON-*.txt
+git add INSTALLATION-COMPLETE.md
+git add PUSH-LOGO-TO-GITHUB.md
+git add push-logo.ps1
+git add scripts/favicon-helper.html
+git add scripts/generate-favicon.*
+git add public/.logo-placeholder.txt
+
+git commit -m "feat: Intégrer logo UBA et favicon"
+
+git push -u origin master
+
+✅ TERMINÉ !
+
+═══════════════════════════════════════════════════════════════
+
+🔍 Vérifier sur GitHub
+═══════════════════════════════════════════════════════════════
+
+Visitez : https://github.com/Cyplambg/Uba-convension
+
+Vous devriez voir :
+✅ Nouveau commit "feat: Intégrer logo UBA et favicon"
+✅ Logo visible dans public/logo.jpg
+✅ Documentation complète
+
+═══════════════════════════════════════════════════════════════
+
+⚠️ Si erreur "remote origin already exists"
+═══════════════════════════════════════════════════════════════
+
+git remote remove origin
+git remote add origin https://github.com/Cyplambg/Uba-convension.git
+git push -u origin master
+
+═══════════════════════════════════════════════════════════════
+
+📚 Documentation Complète
+═══════════════════════════════════════════════════════════════
+
+Pour plus de détails, consultez :
+   PUSH-LOGO-TO-GITHUB.md
+
+═══════════════════════════════════════════════════════════════
