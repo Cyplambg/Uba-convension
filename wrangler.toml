@@ -1,0 +1,11 @@
+name = "uba-convension"
+main = ".output/server/index.mjs"
+compatibility_date = "2025-01-01"
+
+[vars]
+SUPABASE_PROJECT_ID = "elwzzobkacehlmaawaew"
+SUPABASE_PUBLISHABLE_KEY = "sb_publishable_gPB8iHgq1mW7iPFrKzNbuA_C_Spz4kJ"
+SUPABASE_URL = "https://elwzzobkacehlmaawaew.supabase.co"
+VITE_SUPABASE_PROJECT_ID = "elwzzobkacehlmaawaew"
+VITE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_gPB8iHgq1mW7iPFrKzNbuA_C_Spz4kJ"
+VITE_SUPABASE_URL = "https://elwzzobkacehlmaawaew.supabase.co"

@@ -9,39 +9,43 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedUtilisateursRouteImport } from './routes/_authenticated/utilisateurs'
-import { Route as AuthenticatedTableauRouteImport } from './routes/_authenticated/tableau'
-import { Route as AuthenticatedStatistiquesRouteImport } from './routes/_authenticated/statistiques'
-import { Route as AuthenticatedSaisieRouteImport } from './routes/_authenticated/saisie'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAgencesRouteImport } from './routes/_authenticated/agences'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedSaisieRouteImport } from './routes/_authenticated/saisie'
+import { Route as AuthenticatedStatistiquesRouteImport } from './routes/_authenticated/statistiques'
+import { Route as AuthenticatedTableauRouteImport } from './routes/_authenticated/tableau'
+import { Route as AuthenticatedUtilisateursRouteImport } from './routes/_authenticated/utilisateurs'
 
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedUtilisateursRoute =
-  AuthenticatedUtilisateursRouteImport.update({
-    id: '/utilisateurs',
-    path: '/utilisateurs',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedTableauRoute = AuthenticatedTableauRouteImport.update({
-  id: '/tableau',
-  path: '/tableau',
+const AuthenticatedAgencesRoute = AuthenticatedAgencesRouteImport.update({
+  id: '/agences',
+  path: '/agences',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSaisieRoute = AuthenticatedSaisieRouteImport.update({
+  id: '/saisie',
+  path: '/saisie',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedStatistiquesRoute =
@@ -50,21 +54,17 @@ const AuthenticatedStatistiquesRoute =
     path: '/statistiques',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedSaisieRoute = AuthenticatedSaisieRouteImport.update({
-  id: '/saisie',
-  path: '/saisie',
+const AuthenticatedTableauRoute = AuthenticatedTableauRouteImport.update({
+  id: '/tableau',
+  path: '/tableau',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedAgencesRoute = AuthenticatedAgencesRouteImport.update({
-  id: '/agences',
-  path: '/agences',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
+const AuthenticatedUtilisateursRoute =
+  AuthenticatedUtilisateursRouteImport.update({
+    id: '/utilisateurs',
+    path: '/utilisateurs',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -140,11 +140,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -154,39 +154,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/utilisateurs': {
-      id: '/_authenticated/utilisateurs'
-      path: '/utilisateurs'
-      fullPath: '/utilisateurs'
-      preLoaderRoute: typeof AuthenticatedUtilisateursRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/tableau': {
-      id: '/_authenticated/tableau'
-      path: '/tableau'
-      fullPath: '/tableau'
-      preLoaderRoute: typeof AuthenticatedTableauRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/statistiques': {
-      id: '/_authenticated/statistiques'
-      path: '/statistiques'
-      fullPath: '/statistiques'
-      preLoaderRoute: typeof AuthenticatedStatistiquesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/saisie': {
-      id: '/_authenticated/saisie'
-      path: '/saisie'
-      fullPath: '/saisie'
-      preLoaderRoute: typeof AuthenticatedSaisieRouteImport
+    '/_authenticated/agences': {
+      id: '/_authenticated/agences'
+      path: '/agences'
+      fullPath: '/agences'
+      preLoaderRoute: typeof AuthenticatedAgencesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -196,11 +175,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/agences': {
-      id: '/_authenticated/agences'
-      path: '/agences'
-      fullPath: '/agences'
-      preLoaderRoute: typeof AuthenticatedAgencesRouteImport
+    '/_authenticated/saisie': {
+      id: '/_authenticated/saisie'
+      path: '/saisie'
+      fullPath: '/saisie'
+      preLoaderRoute: typeof AuthenticatedSaisieRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/statistiques': {
+      id: '/_authenticated/statistiques'
+      path: '/statistiques'
+      fullPath: '/statistiques'
+      preLoaderRoute: typeof AuthenticatedStatistiquesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tableau': {
+      id: '/_authenticated/tableau'
+      path: '/tableau'
+      fullPath: '/tableau'
+      preLoaderRoute: typeof AuthenticatedTableauRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/utilisateurs': {
+      id: '/_authenticated/utilisateurs'
+      path: '/utilisateurs'
+      fullPath: '/utilisateurs'
+      preLoaderRoute: typeof AuthenticatedUtilisateursRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
   }
@@ -235,3 +235,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

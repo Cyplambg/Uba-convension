@@ -1,5 +1,6 @@
 import * as XLSX from "xlsx";
 import { MONTHS_FR } from "./months";
+import { downloadFile } from "./download";
 
 export interface MonthlyRow {
   month: number;
@@ -8,10 +9,6 @@ export interface MonthlyRow {
   pm: number;
 }
 
-/**
- * Converts an image file to base64 data URL for embedding in Excel
- * Usage: const logoBase64 = await imageToBase64('/logo.png');
- */
 export async function imageToBase64(imagePath: string): Promise<string | null> {
   try {
     const response = await fetch(imagePath);
@@ -28,20 +25,10 @@ export async function imageToBase64(imagePath: string): Promise<string | null> {
   }
 }
 
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
-}
+const MIME_XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
-function workbookToBlob(wb: XLSX.WorkBook): Blob {
-  const data = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-  return new Blob([data], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+function workbookToBuffer(wb: XLSX.WorkBook): Uint8Array {
+  return XLSX.write(wb, { bookType: "xlsx", type: "array" });
 }
 
 export function exportAgencyYear(opts: {
@@ -55,7 +42,7 @@ export function exportAgencyYear(opts: {
 
   const header = [
     ["ZOUANE CONVENTIONS"],
-    [""],  // Reserved for logo space
+    [""],
     [`Agence : ${agencyName}${agencyCode ? " (" + agencyCode + ")" : ""}`],
     [`Année : ${year}`],
     [`Date d'export : ${new Date().toLocaleDateString("fr-FR")}`],
@@ -71,8 +58,7 @@ export function exportAgencyYear(opts: {
     return [name, cc, ce, pm, cc + ce + pm];
   });
 
-  // Totals row with formulas
-  const startRow = header.length + 1; // 1-based; header lines above
+  const startRow = header.length + 1;
   const endRow = startRow + 11;
   const totalRow = [
     "TOTAL",
@@ -84,14 +70,10 @@ export function exportAgencyYear(opts: {
 
   const aoa = [...header, ...body, totalRow];
   const ws = XLSX.utils.aoa_to_sheet(aoa);
-
-  // Column widths
   ws["!cols"] = [{ wch: 14 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 12 }];
-
-  // Merge title across A1:E1 and logo space A2:E2
   ws["!merges"] = [
     { s: { r: 0, c: 0 }, e: { r: 0, c: 4 } },
-    { s: { r: 1, c: 0 }, e: { r: 1, c: 4 } }, // Logo space
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 4 } },
     { s: { r: 2, c: 0 }, e: { r: 2, c: 4 } },
     { s: { r: 3, c: 0 }, e: { r: 3, c: 4 } },
     { s: { r: 4, c: 0 }, e: { r: 4, c: 4 } },
@@ -100,7 +82,7 @@ export function exportAgencyYear(opts: {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, `${year}`);
   const filename = `Conventions_${agencyName.replace(/\s+/g, "_")}_${year}.xlsx`;
-  downloadBlob(workbookToBlob(wb), filename);
+  downloadFile(workbookToBuffer(wb), filename, MIME_XLSX);
 }
 
 export interface AgencyYearData {
@@ -114,10 +96,9 @@ export function exportAnnualReport(opts: { year: number; agencies: AgencyYearDat
   const { year, agencies } = opts;
   const wb = XLSX.utils.book_new();
 
-  // Synthesis sheet
   const synthHeader = [
     ["ZOUANE CONVENTIONS — BILAN ANNUEL"],
-    [""],  // Reserved for logo space
+    [""],
     [`Année : ${year}`],
     [`Date d'export : ${new Date().toLocaleDateString("fr-FR")}`],
     [`Nombre d'agences : ${agencies.length}`],
@@ -145,19 +126,18 @@ export function exportAnnualReport(opts: { year: number; agencies: AgencyYearDat
   synth["!cols"] = [{ wch: 22 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 12 }];
   synth["!merges"] = [
     { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } },
-    { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } },  // Logo space
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } },
     { s: { r: 2, c: 0 }, e: { r: 2, c: 5 } },
     { s: { r: 3, c: 0 }, e: { r: 3, c: 5 } },
     { s: { r: 4, c: 0 }, e: { r: 4, c: 5 } },
   ];
   XLSX.utils.book_append_sheet(wb, synth, "Synthèse");
 
-  // One sheet per agency
   for (const a of agencies) {
     const map = new Map(a.rows.map((r) => [r.month, r]));
     const header = [
       ["ZOUANE CONVENTIONS"],
-      [""],  // Reserved for logo space
+      [""],
       [`Agence : ${a.agencyName}${a.agencyCode ? " (" + a.agencyCode + ")" : ""}`],
       [`Année : ${year}`],
       [],
@@ -181,7 +161,7 @@ export function exportAnnualReport(opts: { year: number; agencies: AgencyYearDat
     ws["!cols"] = [{ wch: 14 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 12 }];
     ws["!merges"] = [
       { s: { r: 0, c: 0 }, e: { r: 0, c: 4 } },
-      { s: { r: 1, c: 0 }, e: { r: 1, c: 4 } },  // Logo space
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 4 } },
       { s: { r: 2, c: 0 }, e: { r: 2, c: 4 } },
       { s: { r: 3, c: 0 }, e: { r: 3, c: 4 } },
     ];
@@ -189,6 +169,5 @@ export function exportAnnualReport(opts: { year: number; agencies: AgencyYearDat
     XLSX.utils.book_append_sheet(wb, ws, sheetName || `Agence`);
   }
 
-  downloadBlob(workbookToBlob(wb), `Bilan_Annuel_${year}.xlsx`);
+  downloadFile(workbookToBuffer(wb), `Bilan_Annuel_${year}.xlsx`, MIME_XLSX);
 }
-

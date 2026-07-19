@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Zouane Conventions</title>
+  <meta name="description" content="Gestion des conventions bancaires UBA" />
+  <meta name="theme-color" content="#B3191F" />
+  <link rel="icon" href="logo.jpg" />
+  <script>
+    window.__SUPABASE_ENV = {
+      SUPABASE_URL: "https://elwzzobkacehlmaawaew.supabase.co",
+      SUPABASE_PUBLISHABLE_KEY: "sb_publishable_gPB8iHgq1mW7iPFrKzNbuA_C_Spz4kJ"
+    };
+  </script>
+</head>
+<body>
+  <div id="loading-screen" style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;color:#666;">
+    <div style="text-align:center;">
+      <div style="font-size:48px;margin-bottom:16px;">🏦</div>
+      <div style="font-weight:600;font-size:18px;color:#B3191F;">Zouane Conventions</div>
+      <div style="margin-top:8px;font-size:14px;">Chargement...</div>
+    </div>
+  </div>
+  <script src="capacitor.js"></script>
+  <script>
+    window.addEventListener('load', function() {
+      var el = document.getElementById('loading-screen');
+      if (el) el.style.display = 'none';
+    });
+  </script>
+</body>
+</html>

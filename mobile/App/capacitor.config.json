@@ -1,0 +1,27 @@
+{
+  "appId": "com.zouane.conventions",
+  "appName": "Zouane Conventions",
+  "webDir": "www",
+  "server": {
+    "url": "https://harchives-uba.mbongo801.workers.dev",
+    "cleartext": false,
+    "androidScheme": "https",
+    "allowNavigation": ["uba-convension.mbongo801.workers.dev", "elwzzobkacehlmaawaew.supabase.co", "fonts.googleapis.com", "fonts.gstatic.com"]
+  },
+  "android": {
+    "buildOptions": {
+      "keystorePath": null,
+      "keystoreAlias": null
+    }
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 3000,
+      "backgroundColor": "#B3191F",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false
+    },
+    "Network": {}
+  }
+}

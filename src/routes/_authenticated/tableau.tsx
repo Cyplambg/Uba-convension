@@ -9,8 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FileSpreadsheet, Printer } from "lucide-react";
+import { FileSpreadsheet, FileDown } from "lucide-react";
 import { exportAgencyYear } from "@/lib/excel-export";
+import { exportAgencyYearPdf } from "@/lib/pdf-export";
 
 export const Route = createFileRoute("/_authenticated/tableau")({
   component: TableauAnnuel,
@@ -58,9 +59,19 @@ function TableauAnnuel() {
 
   const agency = agencies?.find((a) => a.id === agencyId);
 
-  const doExport = () => {
+  const doExportExcel = () => {
     if (!agency) return;
     exportAgencyYear({
+      agencyName: agency.name,
+      agencyCode: agency.code,
+      year,
+      rows: (rows ?? []).map((r) => ({ month: r.month, cc: r.cc, ce: r.ce, pm: r.pm })),
+    });
+  };
+
+  const doExportPdf = () => {
+    if (!agency) return;
+    exportAgencyYearPdf({
       agencyName: agency.name,
       agencyCode: agency.code,
       year,
@@ -90,8 +101,8 @@ function TableauAnnuel() {
               <SelectContent>{YEARS.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}</SelectContent>
             </Select>
           </div>
-          <Button variant="outline" onClick={() => window.print()}><Printer className="mr-1 h-4 w-4" /> Imprimer</Button>
-          <Button onClick={doExport} disabled={!agency}><FileSpreadsheet className="mr-1 h-4 w-4" /> Excel</Button>
+          <Button variant="outline" onClick={doExportPdf} disabled={!agency}><FileDown className="mr-1 h-4 w-4" /> PDF</Button>
+          <Button onClick={doExportExcel} disabled={!agency}><FileSpreadsheet className="mr-1 h-4 w-4" /> Excel</Button>
         </div>
       </div>
 

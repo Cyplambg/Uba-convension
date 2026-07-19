@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générer Favicon - Zouane Conventions</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #B3191F 0%, #8E1418 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            padding: 50px;
+            max-width: 700px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #B3191F;
+            margin-bottom: 15px;
+            font-size: 32px;
+            font-weight: 800;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 16px;
+        }
+        
+        .auto-load {
+            background: #f8f9fa;
+            border-left: 4px solid #B3191F;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+        
+        .auto-load h3 {
+            color: #B3191F;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        
+        .status {
+            font-size: 14px;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .preview-container {
+            display: none;
+            margin: 30px 0;
+        }
+        
+        .preview-container.active {
+            display: block;
+        }
+        
+        .preview-grid {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .preview-item {
+            text-align: center;
+        }
+        
+        canvas {
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .preview-label {
+            font-size: 13px;
+            color: #666;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #B3191F, #8E1418);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(179, 25, 31, 0.3);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(179, 25, 31, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        .instructions {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+            text-align: left;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+        
+        .instructions ol {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        
+        .instructions li {
+            margin: 8px 0;
+        }
+        
+        code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">🎨</div>
+        <h1>Générateur de Favicon</h1>
+        <p class="subtitle">Conversion automatique de logo.jpg → favicon.ico</p>
+        
+        <div class="auto-load">
+            <h3>🚀 Chargement Automatique</h3>
+            <p>Le logo va être chargé automatiquement depuis <code>../public/logo.jpg</code></p>
+        </div>
+        
+        <div id="status" class="status loading">
+            ⏳ Chargement du logo en cours...
+        </div>
+        
+        <div class="preview-container" id="previewContainer">
+            <h3 style="color: #B3191F; margin-bottom: 20px;">✅ Aperçu du Favicon</h3>
+            <div class="preview-grid">
+                <div class="preview-item">
+                    <canvas id="canvas16" width="16" height="16"></canvas>
+                    <div class="preview-label">16×16px</div>
+                </div>
+                <div class="preview-item">
+                    <canvas id="canvas32" width="32" height="32"></canvas>
+                    <div class="preview-label">32×32px</div>
+                </div>
+                <div class="preview-item">
+                    <canvas id="canvas48" width="48" height="48"></canvas>
+                    <div class="preview-label">48×48px</div>
+                </div>
+            </div>
+            
+            <button id="downloadBtn" disabled>
+                📥 Télécharger favicon.ico
+            </button>
+        </div>
+        
+        <div class="instructions">
+            <strong>📋 Prochaines étapes :</strong>
+            <ol>
+                <li>Attendez que le logo se charge automatiquement</li>
+                <li>Vérifiez l'aperçu du favicon en différentes tailles</li>
+                <li>Cliquez sur "Télécharger favicon.ico"</li>
+                <li>Remplacez le fichier dans <code>public/favicon.ico</code></li>
+                <li>Redémarrez votre serveur (<code>bun run dev</code>)</li>
+            </ol>
+        </div>
+    </div>
+    
+    <script>
+        const statusEl = document.getElementById('status');
+        const previewContainer = document.getElementById('previewContainer');
+        const downloadBtn = document.getElementById('downloadBtn');
+        let currentImage = null;
+        
+        // Fonction de rendu des previews
+        function renderPreviews(img) {
+            [16, 32, 48].forEach(size => {
+                const canvas = document.getElementById(`canvas${size}`);
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, size, size);
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                
+                // Calculer le ratio pour centrer l'image
+                const scale = Math.min(size / img.width, size / img.height);
+                const x = (size - img.width * scale) / 2;
+                const y = (size - img.height * scale) / 2;
+                
+                ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+            });
+            
+            previewContainer.classList.add('active');
+            downloadBtn.disabled = false;
+        }
+        
+        // Chargement automatique du logo
+        function loadLogo() {
+            const img = new Image();
+            
+            img.onload = function() {
+                currentImage = img;
+                statusEl.className = 'status success';
+                statusEl.innerHTML = '✅ Logo chargé avec succès ! Vous pouvez télécharger le favicon.';
+                renderPreviews(img);
+            };
+            
+            img.onerror = function() {
+                statusEl.className = 'status error';
+                statusEl.innerHTML = `
+                    ❌ Impossible de charger le logo.<br>
+                    <strong>Solution :</strong> Assurez-vous que ce fichier HTML est dans le dossier racine du projet<br>
+                    et que <code>public/logo.jpg</code> existe.
+                `;
+                
+                // Proposer un upload manuel
+                setTimeout(() => {
+                    statusEl.innerHTML += `<br><br>
+                        <input type="file" id="manualUpload" accept="image/*" style="margin-top: 10px;">
+                        <br><small>Ou uploadez manuellement votre logo</small>
+                    `;
+                    
+                    document.getElementById('manualUpload').addEventListener('change', function(e) {
+                        const file = e.target.files[0];
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onload = function(event) {
+                                const img = new Image();
+                                img.onload = function() {
+                                    currentImage = img;
+                                    statusEl.className = 'status success';
+                                    statusEl.innerHTML = '✅ Logo uploadé avec succès !';
+                                    renderPreviews(img);
+                                };
+                                img.src = event.target.result;
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    });
+                }, 1000);
+            };
+            
+            // Tenter de charger depuis plusieurs chemins possibles
+            const paths = [
+                '../public/logo.jpg',
+                './public/logo.jpg',
+                'public/logo.jpg',
+                'logo.jpg'
+            ];
+            
+            function tryNextPath(index) {
+                if (index >= paths.length) {
+                    img.onerror();
+                    return;
+                }
+                
+                img.src = paths[index];
+                
+                // Si ça échoue, essayer le chemin suivant
+                const originalError = img.onerror;
+                img.onerror = function() {
+                    if (index < paths.length - 1) {
+                        tryNextPath(index + 1);
+                    } else {
+                        originalError();
+                    }
+                };
+            }
+            
+            tryNextPath(0);
+        }
+        
+        // Téléchargement du favicon
+        downloadBtn.addEventListener('click', function() {
+            if (!currentImage) return;
+            
+            // Créer un canvas 32x32 pour le favicon final
+            const canvas = document.getElementById('canvas32');
+            
+            // Convertir en ICO (simplifié - utilise PNG)
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'favicon.ico';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                // Message de succès
+                statusEl.className = 'status success';
+                statusEl.innerHTML = `
+                    ✅ <strong>Favicon téléchargé !</strong><br>
+                    Placez le fichier dans <code>public/favicon.ico</code> et redémarrez le serveur.
+                `;
+            }, 'image/png');
+        });
+        
+        // Démarrer le chargement automatique
+        window.addEventListener('load', loadLogo);
+    </script>
+</body>
+</html>
