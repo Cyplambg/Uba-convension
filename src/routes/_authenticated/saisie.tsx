@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -33,6 +33,7 @@ function Saisie() {
   const [pm, setPm] = useState<string>("");
 
   const [originalRow, setOriginalRow] = useState<{ year: number; month: number } | null>(null);
+  const loadedKeyRef = useRef("");
 
   useEffect(() => {
     if (role === "agent" && profile?.agency_id) setAgencyId(profile.agency_id);
@@ -55,13 +56,18 @@ function Saisie() {
   });
 
   useEffect(() => {
+    const key = `${agencyId}_${year}_${month}`;
     setCc(existing?.cc?.toString() ?? "");
     setCe(existing?.ce?.toString() ?? "");
     setPm(existing?.pm?.toString() ?? "");
     if (existing) {
-      setOriginalRow({ year, month });
+      if (loadedKeyRef.current !== key) {
+        setOriginalRow({ year, month });
+        loadedKeyRef.current = key;
+      }
     } else {
       setOriginalRow(null);
+      loadedKeyRef.current = "";
     }
   }, [existing]);
 
