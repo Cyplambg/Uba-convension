@@ -1,0 +1,9 @@
+{
+  "identifier": "default",
+  "description": "Capabilities par défaut",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "opener:default"
+  ]
+}
