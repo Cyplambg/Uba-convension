@@ -135,22 +135,15 @@ function Saisie() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Année</Label>
-              {role === "admin" ? (
-                <Input
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  value={year}
-                  onChange={(e) => {
-                    const v = Number(e.target.value.replace(/\D/g, ""));
-                    if (v) setYear(v);
-                  }}
-                />
-              ) : (
-                <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{YEARS.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}</SelectContent>
-                </Select>
-              )}
+              <Input
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={year}
+                onChange={(e) => {
+                  const v = Number(e.target.value.replace(/\D/g, ""));
+                  if (v) setYear(v);
+                }}
+              />
             </div>
             <div>
               <Label>Mois</Label>
