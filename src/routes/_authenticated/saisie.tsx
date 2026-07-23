@@ -32,13 +32,13 @@ function Saisie() {
   const [ce, setCe] = useState<string>("");
   const [pm, setPm] = useState<string>("");
 
-  // default agency for agent
+  const [originalRow, setOriginalRow] = useState<{ year: number; month: number } | null>(null);
+
   useEffect(() => {
     if (role === "agent" && profile?.agency_id) setAgencyId(profile.agency_id);
     else if (agencies && agencies.length && !agencyId) setAgencyId(agencies[0].id);
   }, [role, profile, agencies, agencyId]);
 
-  // load existing row for that agency/year/month
   const { data: existing } = useQuery({
     queryKey: ["conv", agencyId, year, month],
     enabled: !!agencyId,
@@ -58,13 +58,31 @@ function Saisie() {
     setCc(existing?.cc?.toString() ?? "");
     setCe(existing?.ce?.toString() ?? "");
     setPm(existing?.pm?.toString() ?? "");
+    if (existing) {
+      setOriginalRow({ year, month });
+    } else {
+      setOriginalRow(null);
+    }
   }, [existing]);
+
+  const dateChanged = !!originalRow && (originalRow.year !== year || originalRow.month !== month);
 
   const total = useMemo(() => (Number(cc) || 0) + (Number(ce) || 0) + (Number(pm) || 0), [cc, ce, pm]);
 
   const save = useMutation({
     mutationFn: async () => {
       if (!agencyId) throw new Error("Choisissez une agence");
+
+      if (dateChanged && originalRow) {
+        const { error: delErr } = await supabase
+          .from("conventions")
+          .delete()
+          .eq("agency_id", agencyId)
+          .eq("year", originalRow.year)
+          .eq("month", originalRow.month);
+        if (delErr) throw delErr;
+      }
+
       const payload = {
         agency_id: agencyId,
         year,
@@ -79,17 +97,19 @@ function Saisie() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Saisie enregistrée");
+      toast.success(dateChanged ? "Date modifiée" : "Saisie enregistrée");
       qc.invalidateQueries();
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const monthName = (m: number) => MONTHS_FR[m - 1] ?? "";
+
   return (
     <div className="mx-auto max-w-2xl p-4 md:p-6">
       <div className="mb-4">
         <h1 className="text-2xl font-black tracking-tight md:text-3xl">Saisie mensuelle</h1>
-        <p className="text-sm text-muted-foreground">Enregistrez les conventions du mois en moins de 30 secondes.</p>
+        <p className="text-sm text-muted-foreground">Enregistrez ou modifiez les conventions du mois.</p>
       </div>
 
       <Card className="p-5 shadow-card">
@@ -135,6 +155,18 @@ function Saisie() {
             </div>
           </div>
 
+          {dateChanged && (
+            <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200">
+              Changement de date : {monthName(originalRow!.month)} {originalRow!.year} → {monthName(month)} {year}
+            </div>
+          )}
+
+          {!!originalRow && !dateChanged && (
+            <div className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950 dark:text-emerald-200">
+              Modification des valeurs pour {monthName(month)} {year}
+            </div>
+          )}
+
           <div className="grid grid-cols-3 gap-3">
             <div>
               <Label>CC</Label>
@@ -159,7 +191,7 @@ function Saisie() {
           </div>
 
           <Button className="w-full" size="lg" onClick={() => save.mutate()} disabled={save.isPending || !agencyId}>
-            {save.isPending ? "Enregistrement…" : existing ? "Mettre à jour" : "Enregistrer"}
+            {save.isPending ? "Enregistrement…" : dateChanged ? "Changer la date" : existing ? "Mettre à jour" : "Enregistrer"}
           </Button>
         </div>
       </Card>
