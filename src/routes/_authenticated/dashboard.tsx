@@ -1,22 +1,28 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import {
-  Building2, FileText, Wallet, PiggyBank, Briefcase, CalendarCheck,
-  TrendingUp, TrendingDown, AlertTriangle, Trophy, Plus, Download, FileBarChart,
+  Building2, FileText, Wallet, PiggyBank, Briefcase, CalendarCheck, Target,
+  TrendingUp, TrendingDown, AlertTriangle, Trophy, Plus, Download, FileBarChart, FileDown,
 } from "lucide-react";
 import { MONTHS_FR } from "@/lib/months";
 import { exportAnnualReport } from "@/lib/excel-export";
+import { downloadFile } from "@/lib/download";
 import { toast } from "sonner";
 import {
   ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
   PieChart, Pie, Cell, Legend,
 } from "recharts";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -103,17 +109,77 @@ function Dashboard() {
     { name: "PM", value: cur.pm, color: "var(--chart-4)" },
   ];
 
-  // Classement des agences (admin only)
+  // Classement des agences avec tendance (admin only)
   const ranking = useMemo(() => {
+    const computeAgencyTotal = (rs: typeof allRows, id: string) =>
+      rs.filter((r) => r.agency_id === id).reduce((s, r) => s + (r.cc ?? 0) + (r.ce ?? 0) + (r.pm ?? 0), 0);
+
     const map = new Map<string, number>();
     rows.forEach((r) => {
       map.set(r.agency_id, (map.get(r.agency_id) ?? 0) + (r.cc ?? 0) + (r.ce ?? 0) + (r.pm ?? 0));
     });
     return Array.from(map.entries())
-      .map(([id, total]) => ({ id, name: agencyName(id), total }))
+      .map(([id, total]) => {
+        const prevTotal = computeAgencyTotal(allRows.filter((r) => r.year === year - 1), id);
+        return { id, name: agencyName(id), total, prevTotal };
+      })
       .sort((a, b) => b.total - a.total)
       .slice(0, 5);
-  }, [rows, agencies]);
+  }, [rows, agencies, allRows, year]);
+
+  // Objectifs mensuels (localStorage)
+  const storageKey = `targets_${year}`;
+  const defaultTargets = MONTHS_FR.map((_, i) => ({ month: i + 1, cc: 0, ce: 0, pm: 0 }));
+  const [targets, setTargetsState] = useState<{ month: number; cc: number; ce: number; pm: number }[]>(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      return saved ? JSON.parse(saved) : defaultTargets;
+    } catch { return defaultTargets; }
+  });
+  const [targetDialogOpen, setTargetDialogOpen] = useState(false);
+  const [editTargets, setEditTargets] = useState(targets);
+
+  const saveTargets = () => {
+    localStorage.setItem(storageKey, JSON.stringify(editTargets));
+    setTargetsState(editTargets);
+    setTargetDialogOpen(false);
+    toast.success("Objectifs enregistrés");
+  };
+
+  const dashboardRef = useRef<HTMLDivElement>(null);
+
+  const exportPdf = async () => {
+    const el = dashboardRef.current;
+    if (!el) return;
+    const origOverflow = document.body.style.overflow;
+    document.body.style.overflow = "visible";
+    try {
+      const canvas = await html2canvas(el, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#fff",
+        logging: false,
+      });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfW = pdf.internal.pageSize.getWidth();
+      const pdfH = (canvas.height * pdfW) / canvas.width;
+      let heightLeft = pdfH;
+      let position = 0;
+      pdf.addImage(imgData, "PNG", 0, position, pdfW, pdfH);
+      heightLeft -= pdf.internal.pageSize.getHeight();
+      while (heightLeft > 0) {
+        position -= pdf.internal.pageSize.getHeight();
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, pdfW, pdfH);
+        heightLeft -= pdf.internal.pageSize.getHeight();
+      }
+      const buffer = pdf.output("arraybuffer");
+      downloadFile(new Uint8Array(buffer), `Tableau_de_bord_${year}.pdf`, "application/pdf");
+    } finally {
+      document.body.style.overflow = origOverflow;
+    }
+  };
 
   const stats = [
     { label: "Total conventions", value: cur.total, icon: FileText, tone: "bg-primary/10 text-primary" },
@@ -149,7 +215,7 @@ function Dashboard() {
 
   return (
 
-    <div className="mx-auto max-w-6xl space-y-6 p-4 md:p-6">
+    <div ref={dashboardRef} className="mx-auto max-w-6xl space-y-6 p-4 md:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-black tracking-tight md:text-3xl">Tableau de bord</h1>
@@ -176,6 +242,61 @@ function Dashboard() {
           <Button size="sm" variant="secondary" onClick={generateBilan}>
             <FileBarChart className="mr-1 h-4 w-4" />Bilan annuel
           </Button>
+          <Button size="sm" variant="outline" onClick={exportPdf}>
+            <FileDown className="mr-1 h-4 w-4" />PDF
+          </Button>
+          {role === "admin" && !filterAgencyId && (
+            <Dialog open={targetDialogOpen} onOpenChange={setTargetDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="ghost"><Target className="mr-1 h-4 w-4" />Objectifs</Button>
+              </DialogTrigger>
+              <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-lg">
+                <DialogHeader>
+                  <DialogTitle>Objectifs mensuels — {year}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-3 py-2">
+                  {MONTHS_FR.map((m, i) => {
+                    const t = editTargets[i];
+                    return (
+                      <div key={m} className="rounded-md border p-3">
+                        <div className="mb-2 text-sm font-semibold">{m}</div>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div>
+                            <Label className="text-[10px]">CC</Label>
+                            <Input type="number" min={0} value={t.cc} onChange={(e) => {
+                              const copy = [...editTargets];
+                              copy[i] = { ...copy[i], cc: Number(e.target.value) || 0 };
+                              setEditTargets(copy);
+                            }} />
+                          </div>
+                          <div>
+                            <Label className="text-[10px]">CE</Label>
+                            <Input type="number" min={0} value={t.ce} onChange={(e) => {
+                              const copy = [...editTargets];
+                              copy[i] = { ...copy[i], ce: Number(e.target.value) || 0 };
+                              setEditTargets(copy);
+                            }} />
+                          </div>
+                          <div>
+                            <Label className="text-[10px]">PM</Label>
+                            <Input type="number" min={0} value={t.pm} onChange={(e) => {
+                              const copy = [...editTargets];
+                              copy[i] = { ...copy[i], pm: Number(e.target.value) || 0 };
+                              setEditTargets(copy);
+                            }} />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex justify-end gap-2">
+                  <DialogClose asChild><Button variant="outline">Annuler</Button></DialogClose>
+                  <Button onClick={saveTargets}>Enregistrer</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </div>
 
@@ -228,6 +349,41 @@ function Dashboard() {
               className={`h-full rounded-full transition-all duration-500 ${completionPct >= 80 ? "bg-success" : completionPct >= 50 ? "bg-warning" : "bg-destructive"}`}
               style={{ width: `${completionPct}%` }}
             />
+          </div>
+        </Card>
+      )}
+
+      {/* Objectifs mensuels */}
+      {role === "admin" && !filterAgencyId && targets.some((t) => t.cc || t.ce || t.pm) && (
+        <Card className="p-4 shadow-card">
+          <div className="mb-3 flex items-center gap-2 font-semibold">
+            <Target className="h-4 w-4 text-primary" /> Objectifs vs réalisé — {year}
+          </div>
+          <div className="grid gap-2">
+            {MONTHS_FR.map((m, i) => {
+              const t = targets[i];
+              if (!t.cc && !t.ce && !t.pm) return null;
+              const actual = monthly[i];
+              const targetTotal = t.cc + t.ce + t.pm;
+              const actualTotal = actual.Total;
+              const pct = targetTotal ? Math.min(Math.round((actualTotal / targetTotal) * 100), 100) : 0;
+              return (
+                <div key={m}>
+                  <div className="mb-1 flex items-center justify-between text-xs">
+                    <span className="font-medium">{m}</span>
+                    <span className="tabular-nums text-muted-foreground">
+                      {actualTotal.toLocaleString("fr-FR")} / {targetTotal.toLocaleString("fr-FR")}
+                    </span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className={`h-full rounded-full transition-all ${pct >= 100 ? "bg-success" : pct >= 70 ? "bg-warning" : "bg-destructive"}`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </Card>
       )}
@@ -315,17 +471,26 @@ function Dashboard() {
               <ol className="space-y-2">
                 {ranking.map((r, idx) => {
                   const max = ranking[0].total || 1;
+                  const agencyDelta = r.prevTotal ? ((r.total - r.prevTotal) / r.prevTotal) * 100 : null;
                   return (
                     <li key={r.id} className="space-y-1">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="font-medium">
-                          <span className="mr-2 inline-grid h-5 w-5 place-items-center rounded-full bg-primary/10 text-xs font-bold text-primary">{idx + 1}</span>
+                        <span className="flex items-center gap-1.5 font-medium">
+                          <span className="inline-grid h-5 w-5 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-bold text-primary">{idx + 1}</span>
                           {r.name}
                         </span>
                         <span className="tabular-nums font-semibold">{r.total.toLocaleString("fr-FR")}</span>
                       </div>
-                      <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                        <div className="h-full bg-primary" style={{ width: `${(r.total / max) * 100}%` }} />
+                      <div className="flex items-center justify-between">
+                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                          <div className="h-full bg-primary" style={{ width: `${(r.total / max) * 100}%` }} />
+                        </div>
+                        {agencyDelta !== null && (
+                          <span className={`ml-2 flex shrink-0 items-center gap-0.5 text-[10px] font-semibold ${agencyDelta >= 0 ? "text-success" : "text-destructive"}`}>
+                            {agencyDelta >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                            {agencyDelta > 0 ? "+" : ""}{agencyDelta.toFixed(1)}%
+                          </span>
+                        )}
                       </div>
                     </li>
                   );
