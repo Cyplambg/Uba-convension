@@ -1,3 +1,0 @@
-[install.lockfile]
-# Use binary lockfile format (bun.lockb) instead of text format (bun.lock)
-format = "binary"
