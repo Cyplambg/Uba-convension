@@ -1,4 +1,4 @@
-name = "uba-convension"
+name = "harchives-uba"
 main = ".output/server/index.mjs"
 compatibility_date = "2025-01-01"
 
