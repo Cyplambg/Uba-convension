@@ -69,9 +69,9 @@ function TableauAnnuel() {
     });
   };
 
-  const doExportPdf = () => {
+  const doExportPdf = async () => {
     if (!agency) return;
-    exportAgencyYearPdf({
+    await exportAgencyYearPdf({
       agencyName: agency.name,
       agencyCode: agency.code,
       year,
@@ -108,7 +108,7 @@ function TableauAnnuel() {
 
       <Card className="p-4 shadow-card">
         <div className="mb-3 text-center">
-          <div className="text-xs uppercase tracking-widest text-muted-foreground">Zouane Conventions</div>
+          <div className="text-xs uppercase tracking-widest text-muted-foreground">UBA Archives</div>
           <div className="text-lg font-bold">{agency?.name ?? "—"} — {year}</div>
         </div>
         <div className="overflow-x-auto">

@@ -3,6 +3,7 @@ import { LayoutDashboard, PencilLine, Building2, BarChart3, Table, Users, MoreHo
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import { ModeToggle } from "@/components/mode-toggle";
 
 export function MobileNav() {
   const { role } = useAuth();
@@ -48,6 +49,10 @@ export function MobileNav() {
       )}
     >
       <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-white/10 bg-neutral-900/90 px-2 py-2 shadow-2xl backdrop-blur-xl">
+        <div className="mr-1 text-white dark:text-white">
+          <ModeToggle />
+        </div>
+        <div className="h-6 w-px bg-white/10" />
         {items.map((it) => {
           const active = path === it.url;
           return (

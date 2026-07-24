@@ -1,73 +1,41 @@
-function arrToBase64(arr: number[]): string {
+function toBase64(bytes: Uint8Array): string {
   let binary = "";
-  const chunk = 8192;
-  for (let i = 0; i < arr.length; i += chunk) {
-    binary += String.fromCharCode(...arr.slice(i, i + chunk));
+  for (let i = 0; i < bytes.length; i += 8192) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
   }
   return btoa(binary);
 }
 
-function isCapacitor(): boolean {
-  return typeof window !== "undefined" && !!(window as any).Capacitor?.isNativePlatform;
-}
-
-function swDownload(data: Uint8Array, filename: string, mime: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const sw = navigator.serviceWorker.controller;
-    if (!sw) return reject(new Error("No SW controller"));
-
-    const channel = new MessageChannel();
-    channel.port1.onmessage = (event) => {
-      if (event.data?.type === "DOWNLOAD_READY") {
-        const url = `/__download/${event.data.token}/${encodeURIComponent(filename)}`;
-        const win = window.open(url, "_blank");
-        if (!win) {
-          window.location.href = url;
-        }
-        resolve();
-      }
-    };
-
-    sw.postMessage(
-      { type: "CACHE_DOWNLOAD", data: arrToBase64(Array.from(data)), filename, mime },
-      [channel.port2] as any,
-    );
-
-    setTimeout(() => reject(new Error("SW download timeout")), 10000);
-  });
-}
-
-async function trySwDownload(data: Uint8Array, filename: string, mime: string): Promise<boolean> {
-  try {
-    if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
-      await swDownload(data, filename, mime);
-      return true;
-    }
-  } catch {
-  }
-  return false;
-}
-
 export async function downloadFile(data: Uint8Array | ArrayBuffer, filename: string, mime: string) {
   const bytes = data instanceof ArrayBuffer ? new Uint8Array(data) : data;
-
-  if (isCapacitor()) {
-    if (await trySwDownload(bytes, filename, mime)) return;
-  }
-
   const blob = new Blob([bytes], { type: mime });
 
-  if (navigator.share) {
+  // Capacitor → service worker proxy
+  const cap = (window as any).Capacitor?.isNativePlatform;
+  if (cap) {
     try {
-      await navigator.share({
-        title: filename,
-        files: [new File([blob], filename, { type: mime })],
-      });
-      return;
-    } catch {
-    }
+      const sw = navigator.serviceWorker.controller;
+      if (sw) {
+        const channel = new MessageChannel();
+        await new Promise<void>((resolve, reject) => {
+          channel.port1.onmessage = (e) => {
+            if (e.data?.type === "DOWNLOAD_READY") {
+              window.open(`/__download/${e.data.token}/${encodeURIComponent(filename)}`, "_blank");
+              resolve();
+            }
+          };
+          sw.postMessage(
+            { type: "CACHE_DOWNLOAD", data: toBase64(bytes), filename, mime },
+            [channel.port2] as any,
+          );
+          setTimeout(() => reject(new Error("timeout")), 10000);
+        });
+        return;
+      }
+    } catch {}
   }
 
+  // Navigateur → blob download direct
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;

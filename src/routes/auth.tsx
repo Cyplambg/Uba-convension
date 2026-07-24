@@ -59,7 +59,7 @@ function AuthPage() {
       <Card className="w-full max-w-md p-6 shadow-elegant">
         <Link to="/" className="mb-6 flex items-center gap-2">
           <div className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-primary text-primary-foreground font-black">Z</div>
-          <span className="font-bold tracking-tight">Zouane Conventions</span>
+          <span className="font-bold tracking-tight">UBA Archives</span>
         </Link>
 
         <Tabs defaultValue="login">

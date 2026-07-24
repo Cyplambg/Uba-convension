@@ -69,7 +69,7 @@ function AuthedLayout() {
           >
             <div className="hidden md:block"><SidebarTrigger /></div>
             <img src="/logo.jpg" alt="Logo" className="h-7 w-auto object-contain" />
-            <div className="font-semibold tracking-tight">Zouane Conventions</div>
+            <div className="font-semibold tracking-tight">UBA Archives</div>
             <div className="ml-auto md:hidden">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

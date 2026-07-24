@@ -12,6 +12,8 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/theme-provider";
+import { OfflineBanner } from "@/components/offline-banner";
 
 function NotFoundComponent() {
   return (
@@ -53,17 +55,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Zouane Conventions — Gestion des conventions bancaires" },
+      { title: "UBA Archives — Gestion des conventions bancaires" },
       { name: "description", content: "Application de saisie et suivi des conventions bancaires par agence : CC, CE, PM. Statistiques, tableau annuel et export Excel." },
-      { name: "author", content: "Zouane Conventions" },
-      { property: "og:title", content: "Zouane Conventions" },
+      { name: "author", content: "UBA Archives" },
+      { property: "og:title", content: "UBA Archives" },
       { property: "og:description", content: "Remplacez les fiches papier : saisie mobile, statistiques temps réel et export Excel des conventions par agence." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/logo.jpg", type: "image/jpeg" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" },
@@ -109,10 +111,13 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Outlet />
-        <Toaster richColors position="top-right" />
-      </AuthProvider>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <OfflineBanner />
+        <AuthProvider>
+          <Outlet />
+          <Toaster richColors position="top-right" />
+        </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

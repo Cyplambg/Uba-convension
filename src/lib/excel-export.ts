@@ -41,7 +41,7 @@ export function exportAgencyYear(opts: {
   const map = new Map(rows.map((r) => [r.month, r]));
 
   const header = [
-    ["ZOUANE CONVENTIONS"],
+    ["UBA ARCHIVES"],
     [""],
     [`Agence : ${agencyName}${agencyCode ? " (" + agencyCode + ")" : ""}`],
     [`Année : ${year}`],
@@ -97,7 +97,7 @@ export function exportAnnualReport(opts: { year: number; agencies: AgencyYearDat
   const wb = XLSX.utils.book_new();
 
   const synthHeader = [
-    ["ZOUANE CONVENTIONS — BILAN ANNUEL"],
+    ["UBA ARCHIVES — BILAN ANNUEL"],
     [""],
     [`Année : ${year}`],
     [`Date d'export : ${new Date().toLocaleDateString("fr-FR")}`],
@@ -136,7 +136,7 @@ export function exportAnnualReport(opts: { year: number; agencies: AgencyYearDat
   for (const a of agencies) {
     const map = new Map(a.rows.map((r) => [r.month, r]));
     const header = [
-      ["ZOUANE CONVENTIONS"],
+      ["UBA ARCHIVES"],
       [""],
       [`Agence : ${a.agencyName}${a.agencyCode ? " (" + a.agencyCode + ")" : ""}`],
       [`Année : ${year}`],
