@@ -161,14 +161,14 @@ function Dashboard() {
     }
 
     // Trend
-    if (prev.total > 0) {
+    if (cur.total > 0 && prev.total > 0) {
       if (delta > 5) list.push(`Excellente dynamique : la production globale est en hausse de ${delta.toFixed(1)}% par rapport à la même période l'année précédente.`);
       else if (delta < -5) list.push(`Attention : une baisse de ${Math.abs(delta).toFixed(1)}% est observée par rapport à l'année précédente.`);
       else list.push(`La production globale est stable par rapport à la même période l'année dernière (${delta > 0 ? "+" : ""}${delta.toFixed(1)}%).`);
     }
 
     // Top agency
-    if (role === "admin" && !filterAgencyId && ranking.length > 0) {
+    if (role === "admin" && !filterAgencyId && ranking.length > 0 && ranking[0].total > 0) {
        list.push(`L'agence de ${ranking[0].name} est la plus performante avec ${ranking[0].total.toLocaleString("fr-FR")} conventions au total.`);
     }
 
