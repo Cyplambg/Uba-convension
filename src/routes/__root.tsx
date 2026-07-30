@@ -78,12 +78,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
-  let supabaseUrl = "";
-  let supabaseKey = "";
-  if (typeof process !== "undefined" && process.env.SUPABASE_URL) {
-    supabaseUrl = process.env.SUPABASE_URL;
-    supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY || "";
-  }
+  // Utiliser les variables d'environnement côté serveur et client de manière cohérente
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
+  const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
+  
   return (
     <html lang="fr">
       <head>
