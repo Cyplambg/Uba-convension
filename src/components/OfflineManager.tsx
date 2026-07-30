@@ -4,7 +4,7 @@ import { syncOfflineData, getSyncQueueCount } from "@/lib/sync";
 import { useQueryClient } from "@tanstack/react-query";
 import { WifiOff, Wifi } from "lucide-react";
 
-export function OfflineBanner() {
+export function OfflineManager() {
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [pendingCount, setPendingCount] = useState(getSyncQueueCount());
   const qc = useQueryClient();
@@ -39,13 +39,13 @@ export function OfflineBanner() {
 
     const handleOffline = () => {
       setIsOffline(true);
-      toast.warning("Mode hors-ligne activé. Vos saisies sont enregistrées localement.");
+      toast.warning("Mode hors-ligne activé. Vos saisies seront sauvegardées localement.");
     };
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
 
-    // Initial check pour online sync
+    // Essayer de synchroniser au chargement si on est online et qu'il y a des données
     if (navigator.onLine && getSyncQueueCount() > 0) {
       handleOnline();
     }
@@ -59,15 +59,14 @@ export function OfflineBanner() {
   if (!isOffline && pendingCount === 0) return null;
 
   return (
-    <div className={`px-4 py-2 text-sm font-medium flex items-center justify-center gap-2 z-50 sticky top-0 transition-all ${
-      isOffline 
-        ? "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 border-b border-amber-300 dark:border-amber-700" 
-        : "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 border-b border-emerald-300 dark:border-emerald-700"
+    <div className={`fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium shadow-lg transition-all ${
+      isOffline ? "bg-amber-100 text-amber-800 dark:bg-amber-900/80 dark:text-amber-200 border border-amber-300 dark:border-amber-700" 
+      : "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/80 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700"
     }`}>
       {isOffline ? <WifiOff className="h-4 w-4" /> : <Wifi className="h-4 w-4" />}
       {isOffline 
-        ? <span>Mode hors-ligne.{pendingCount > 0 ? ` ${pendingCount} saisie(s) en attente.` : " Saisies locales activées."}</span>
-        : <span>Synchronisation en cours...</span>}
+        ? `Hors ligne${pendingCount > 0 ? ` (${pendingCount} en attente)` : ""}`
+        : "Synchronisation..."}
     </div>
   );
 }

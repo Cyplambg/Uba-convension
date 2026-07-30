@@ -13,6 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { ChevronLeft, ChevronRight, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { addToSyncQueue } from "@/lib/sync";
 
 export const Route = createFileRoute("/_authenticated/saisie")({
   component: Saisie,
@@ -168,6 +169,8 @@ function SaisieMensuelle({ agencyId, year, month, setMonth, setYear }: { agencyI
   const dateChanged = !!originalRow && (originalRow.year !== year || originalRow.month !== month);
   const total = useMemo(() => (Number(cc) || 0) + (Number(ce) || 0) + (Number(pm) || 0), [cc, ce, pm]);
 
+
+
   const save = useMutation({
     mutationFn: async () => {
       if (!agencyId) throw new Error("Choisissez une agence");
@@ -190,15 +193,26 @@ function SaisieMensuelle({ agencyId, year, month, setMonth, setYear }: { agencyI
         ce: Number(ce) || 0,
         pm: Number(pm) || 0,
       };
+
+      if (!navigator.onLine) {
+        addToSyncQueue(payload);
+        return { offline: true };
+      }
+
       const { error } = await supabase
         .from("conventions")
         .upsert(payload, { onConflict: "agency_id,year,month" });
       if (error) throw error;
+      return { offline: false };
     },
-    onSuccess: () => {
-      localStorage.removeItem(`brouillon_${agencyId}_${year}_${month}`);
+    onSuccess: (data) => {
+      localStorage.removeItem(draftKey);
       setHasDraft(false);
-      toast.success(dateChanged ? "Date modifiée" : "Saisie enregistrée");
+      if (data?.offline) {
+        toast.success("Hors ligne : Enregistré localement");
+      } else {
+        toast.success(dateChanged ? "Date modifiée" : "Saisie enregistrée");
+      }
       qc.invalidateQueries();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -428,14 +442,23 @@ function SaisieAnnuelle({ agencyId, year }: { agencyId: string, year: number }) 
       })).filter(r => r.cc > 0 || r.ce > 0 || r.pm > 0 || existing?.some(x => x.month === r.month)); 
       
       if (payload.length > 0) {
+        if (!navigator.onLine) {
+          addToSyncQueue(payload);
+          return { offline: true };
+        }
         const { error } = await supabase.from("conventions").upsert(payload, { onConflict: "agency_id,year,month" });
         if (error) throw error;
       }
+      return { offline: false };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       localStorage.removeItem(draftKey);
       setHasDraft(false);
-      toast.success("Année complète enregistrée !");
+      if (data?.offline) {
+        toast.success("Hors ligne : Année complète enregistrée localement !");
+      } else {
+        toast.success("Année complète enregistrée !");
+      }
       qc.invalidateQueries();
     },
     onError: (e: Error) => toast.error(e.message),
