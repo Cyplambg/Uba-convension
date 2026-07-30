@@ -11,8 +11,13 @@ export type SyncPayload = {
   pm: number;
 };
 
+// Vérifier si on est côté client
+const isClient = typeof window !== "undefined";
+
 // Ajouter des données à la file d'attente hors-ligne
 export const addToSyncQueue = (payloads: SyncPayload | SyncPayload[]) => {
+  if (!isClient) return;
+  
   const existingStr = localStorage.getItem(SYNC_QUEUE_KEY);
   const queue: SyncPayload[] = existingStr ? JSON.parse(existingStr) : [];
   
@@ -34,6 +39,8 @@ export const addToSyncQueue = (payloads: SyncPayload | SyncPayload[]) => {
 
 // Obtenir le nombre d'éléments en attente
 export const getSyncQueueCount = (): number => {
+  if (!isClient) return 0;
+  
   const existingStr = localStorage.getItem(SYNC_QUEUE_KEY);
   if (!existingStr) return 0;
   try {
@@ -45,6 +52,8 @@ export const getSyncQueueCount = (): number => {
 
 // Synchroniser les données hors-ligne
 export const syncOfflineData = async (): Promise<{ success: boolean; count: number }> => {
+  if (!isClient) return { success: true, count: 0 };
+  
   const existingStr = localStorage.getItem(SYNC_QUEUE_KEY);
   if (!existingStr) return { success: true, count: 0 };
   

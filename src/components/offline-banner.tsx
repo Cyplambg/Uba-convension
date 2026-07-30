@@ -5,19 +5,31 @@ import { useQueryClient } from "@tanstack/react-query";
 import { WifiOff, Wifi } from "lucide-react";
 
 export function OfflineBanner() {
-  const [isOffline, setIsOffline] = useState(!navigator.onLine);
-  const [pendingCount, setPendingCount] = useState(getSyncQueueCount());
+  const [isClient, setIsClient] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
   const qc = useQueryClient();
 
+  // S'assurer qu'on est côté client
   useEffect(() => {
+    setIsClient(true);
+    setIsOffline(!navigator.onLine);
+    setPendingCount(getSyncQueueCount());
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+    
     // Vérifier périodiquement s'il y a des éléments en attente (utile quand on sauvegarde hors ligne)
     const interval = setInterval(() => {
       setPendingCount(getSyncQueueCount());
     }, 2000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isClient]);
 
   useEffect(() => {
+    if (!isClient) return;
+    
     const handleOnline = async () => {
       setIsOffline(false);
       
@@ -54,9 +66,10 @@ export function OfflineBanner() {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
-  }, [qc]);
+  }, [qc, isClient]);
 
-  if (!isOffline && pendingCount === 0) return null;
+  // Ne rien afficher pendant le SSR ou si pas de bannière nécessaire
+  if (!isClient || (!isOffline && pendingCount === 0)) return null;
 
   return (
     <div className={`px-4 py-2 text-sm font-medium flex items-center justify-center gap-2 z-50 sticky top-0 transition-all ${
