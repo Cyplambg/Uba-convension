@@ -13,7 +13,7 @@ export async function exportAgencyYearPdf(opts: {
   const doc = new jsPDF("p", "mm", "a4");
   const primaryColor: [number, number, number] = [204, 0, 0];
 
-  const logoBase64 = await imageToBase64("/logo.jpg");
+  const logoBase64 = await imageToBase64("/logo.png");
 
   if (logoBase64) {
     doc.addImage(logoBase64, "JPEG", 14, 15, 20, 20);
@@ -53,7 +53,7 @@ export async function exportAnnualReportPdf(opts: { year: number; agencies: Agen
   // Couleur primaire UBA
   const primaryColor: [number, number, number] = [204, 0, 0];
 
-  const logoBase64 = await imageToBase64("/logo.jpg");
+  const logoBase64 = await imageToBase64("/logo.png");
 
   // --- Page de Synthèse ---
   if (logoBase64) {

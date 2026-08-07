@@ -37,7 +37,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
         <div className="flex items-center gap-2 px-2 py-2">
-          <img src="/logo.jpg" alt="UBA Archives" className="h-8 w-8 shrink-0 object-contain" />
+          <img src="/logo.png" alt="UBA Archives" className="h-8 w-8 shrink-0 object-contain" />
           <div className="min-w-0 group-data-[collapsible=icon]:hidden">
             <div className="truncate text-sm font-bold text-sidebar-foreground">UBA Archives</div>
             <div className="truncate text-xs text-sidebar-foreground/60">Conventions</div>

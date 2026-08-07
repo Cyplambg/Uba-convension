@@ -23,7 +23,7 @@ function Landing() {
       {/* Header */}
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 pt-6 md:px-12">
         <div className="flex items-center gap-3">
-          <img src="/logo.jpg" alt="UBA Archives" className="h-10 w-auto object-contain" />
+          <img src="/logo.png" alt="UBA Archives" className="h-10 w-auto object-contain" />
           <span className="font-bold tracking-tight text-slate-900">UBA Archives</span>
         </div>
         <Link to="/auth" className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-slate-800">
