@@ -82,6 +82,34 @@ function StatsPage() {
     return [...map.entries()].sort(([a], [b]) => a - b).map(([y, t]) => ({ year: String(y), total: t }));
   }, [rows, agencyId]);
 
+  const bilanGeneral = useMemo(() => {
+    const totalCC = filtered.reduce((s, r) => s + r.cc, 0);
+    const totalCE = filtered.reduce((s, r) => s + r.ce, 0);
+    const totalPM = filtered.reduce((s, r) => s + r.pm, 0);
+    const grandTotal = totalCC + totalCE + totalPM;
+    
+    const moyenneParMois = grandTotal / (filtered.length > 0 ? MONTHS_FR.length : 1);
+    
+    const moisMax = monthly.reduce((max, m) => m.total > max.total ? m : max, monthly[0] || { mois: "", total: 0 });
+    const moisMin = monthly.reduce((min, m) => m.total < min.total && m.total > 0 ? m : min, monthly.find(m => m.total > 0) || { mois: "", total: 0 });
+    
+    const nbAgencesActives = new Set(filtered.map(r => r.agency_id)).size;
+    
+    return {
+      totalCC,
+      totalCE,
+      totalPM,
+      grandTotal,
+      moyenneParMois,
+      moisMax,
+      moisMin,
+      nbAgencesActives,
+      pctCC: grandTotal > 0 ? (totalCC / grandTotal * 100) : 0,
+      pctCE: grandTotal > 0 ? (totalCE / grandTotal * 100) : 0,
+      pctPM: grandTotal > 0 ? (totalPM / grandTotal * 100) : 0,
+    };
+  }, [filtered, monthly]);
+
   return (
     <div className="mx-auto max-w-6xl space-y-4 p-4 md:p-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -112,6 +140,80 @@ function StatsPage() {
           </div>
         </div>
       </div>
+
+      {/* Bilan Général Complet */}
+      <Card className="p-6 shadow-card bg-gradient-to-br from-primary/5 to-primary/10">
+        <div className="mb-4 flex items-center gap-2">
+          <div className="h-8 w-1 rounded-full bg-gradient-primary" />
+          <h2 className="text-xl font-black">Bilan Général Complet</h2>
+        </div>
+        
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {/* Total Global */}
+          <div className="rounded-lg border bg-card p-4 shadow-sm">
+            <div className="text-xs font-medium text-muted-foreground">TOTAL GLOBAL</div>
+            <div className="mt-1 text-3xl font-black text-primary">{bilanGeneral.grandTotal.toLocaleString("fr-FR")}</div>
+            <div className="mt-2 text-xs text-muted-foreground">Conventions totales</div>
+          </div>
+
+          {/* CC */}
+          <div className="rounded-lg border bg-card p-4 shadow-sm">
+            <div className="text-xs font-medium text-muted-foreground">CONVENTIONS CC</div>
+            <div className="mt-1 text-2xl font-bold">{bilanGeneral.totalCC.toLocaleString("fr-FR")}</div>
+            <div className="mt-2 flex items-center gap-2">
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                <div className="h-full rounded-full" style={{ width: `${bilanGeneral.pctCC}%`, backgroundColor: CSS_COLORS[0] }} />
+              </div>
+              <span className="text-xs font-semibold tabular-nums">{bilanGeneral.pctCC.toFixed(1)}%</span>
+            </div>
+          </div>
+
+          {/* CE */}
+          <div className="rounded-lg border bg-card p-4 shadow-sm">
+            <div className="text-xs font-medium text-muted-foreground">CONVENTIONS CE</div>
+            <div className="mt-1 text-2xl font-bold">{bilanGeneral.totalCE.toLocaleString("fr-FR")}</div>
+            <div className="mt-2 flex items-center gap-2">
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                <div className="h-full rounded-full" style={{ width: `${bilanGeneral.pctCE}%`, backgroundColor: CSS_COLORS[1] }} />
+              </div>
+              <span className="text-xs font-semibold tabular-nums">{bilanGeneral.pctCE.toFixed(1)}%</span>
+            </div>
+          </div>
+
+          {/* PM */}
+          <div className="rounded-lg border bg-card p-4 shadow-sm">
+            <div className="text-xs font-medium text-muted-foreground">CONVENTIONS PM</div>
+            <div className="mt-1 text-2xl font-bold">{bilanGeneral.totalPM.toLocaleString("fr-FR")}</div>
+            <div className="mt-2 flex items-center gap-2">
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                <div className="h-full rounded-full" style={{ width: `${bilanGeneral.pctPM}%`, backgroundColor: CSS_COLORS[2] }} />
+              </div>
+              <span className="text-xs font-semibold tabular-nums">{bilanGeneral.pctPM.toFixed(1)}%</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Statistiques supplémentaires */}
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          <div className="rounded-lg bg-background/50 p-3 text-center">
+            <div className="text-xs font-medium text-muted-foreground">Moyenne mensuelle</div>
+            <div className="mt-1 text-xl font-bold">{Math.round(bilanGeneral.moyenneParMois).toLocaleString("fr-FR")}</div>
+          </div>
+          
+          <div className="rounded-lg bg-background/50 p-3 text-center">
+            <div className="text-xs font-medium text-muted-foreground">Meilleur mois</div>
+            <div className="mt-1 text-lg font-bold">{bilanGeneral.moisMax.mois || "—"}</div>
+            <div className="text-xs text-muted-foreground">{bilanGeneral.moisMax.total.toLocaleString("fr-FR")} conventions</div>
+          </div>
+          
+          {role === "admin" && (
+            <div className="rounded-lg bg-background/50 p-3 text-center">
+              <div className="text-xs font-medium text-muted-foreground">Agences actives</div>
+              <div className="mt-1 text-xl font-bold">{bilanGeneral.nbAgencesActives}</div>
+            </div>
+          )}
+        </div>
+      </Card>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="p-4 shadow-card">
