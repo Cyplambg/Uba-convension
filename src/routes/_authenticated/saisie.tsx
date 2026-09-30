@@ -363,6 +363,32 @@ function SaisieAnnuelle({ agencyId, year }: { agencyId: string; year: number }) 
   const [quickCe, setQuickCe] = useState("");
   const [quickPm, setQuickPm] = useState("");
 
+  // Effect pour vider les champs quand on passe en mode "add"
+  // et recharger les données quand on revient en mode "replace"
+  useEffect(() => {
+    if (mode === "add") {
+      setRows(emptyRows());
+      localStorage.removeItem(draftKey);
+      setHasDraft(false);
+    } else if (mode === "replace") {
+      // Recharger les données existantes en mode replace
+      if (existing && existing.length > 0) {
+        const newRows = emptyRows();
+        existing.forEach((r) => {
+          newRows[r.month - 1] = {
+            cc: r.cc?.toString() || "",
+            ce: r.ce?.toString() || "",
+            pm: r.pm?.toString() || "",
+          };
+        });
+        setRows(newRows);
+      } else {
+        setRows(emptyRows());
+      }
+      setHasDraft(false);
+    }
+  }, [mode, draftKey, existing]);
+
   const { data: existing, isLoading } = useQuery({
     queryKey: ["conv_annual", agencyId, year],
     enabled: !!agencyId,
