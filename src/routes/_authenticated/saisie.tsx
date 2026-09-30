@@ -13,6 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { ChevronLeft, ChevronRight, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { addToSyncQueue } from "@/lib/sync";
 
 export const Route = createFileRoute("/_authenticated/saisie")({
@@ -356,6 +357,7 @@ function SaisieMensuelle({ agencyId, year, month, setMonth, setYear }: { agencyI
 function SaisieAnnuelle({ agencyId, year }: { agencyId: string, year: number }) {
   const qc = useQueryClient();
   const draftKey = `brouillon_annuel_${agencyId}_${year}`;
+  const [mode, setMode] = useState<"replace" | "add">("replace");
 
   const { data: existing, isLoading } = useQuery({
     queryKey: ["conv_annual", agencyId, year],
@@ -432,32 +434,54 @@ function SaisieAnnuelle({ agencyId, year }: { agencyId: string, year: number }) 
     mutationFn: async () => {
       if (!agencyId) throw new Error("Choisissez une agence");
       
-      const payload = rows.map((r, i) => ({
-        agency_id: agencyId,
-        year,
-        month: i + 1,
-        cc: Number(r.cc) || 0,
-        ce: Number(r.ce) || 0,
-        pm: Number(r.pm) || 0,
-      })).filter(r => r.cc > 0 || r.ce > 0 || r.pm > 0 || existing?.some(x => x.month === r.month)); 
+      const payload = rows.map((r, i) => {
+        const base = {
+          agency_id: agencyId,
+          year,
+          month: i + 1,
+        };
+        
+        if (mode === "add") {
+          const ex = existing?.find(x => x.month === i + 1);
+          return {
+            ...base,
+            cc: (ex?.cc || 0) + (Number(r.cc) || 0),
+            ce: (ex?.ce || 0) + (Number(r.ce) || 0),
+            pm: (ex?.pm || 0) + (Number(r.pm) || 0),
+          };
+        }
+        
+        return {
+          ...base,
+          cc: Number(r.cc) || 0,
+          ce: Number(r.ce) || 0,
+          pm: Number(r.pm) || 0,
+        };
+      }).filter(r => r.cc > 0 || r.ce > 0 || r.pm > 0 || existing?.some(x => x.month === r.month)); 
       
       if (payload.length > 0) {
         if (!navigator.onLine) {
           addToSyncQueue(payload);
-          return { offline: true };
+          return { offline: true, mode };
         }
         const { error } = await supabase.from("conventions").upsert(payload, { onConflict: "agency_id,year,month" });
         if (error) throw error;
       }
-      return { offline: false };
+      return { offline: false, mode };
     },
     onSuccess: (data) => {
       localStorage.removeItem(draftKey);
       setHasDraft(false);
       if (data?.offline) {
-        toast.success("Hors ligne : Année complète enregistrée localement !");
+        toast.success(data.mode === "add" 
+          ? "Hors ligne : Données ajoutées enregistrées localement !" 
+          : "Hors ligne : Année complète enregistrée localement !");
       } else {
-        toast.success("Année complète enregistrée !");
+        if (data?.mode === "add") {
+          toast.success(`Données ajoutées avec succès ! ${monthsToModify} mois ${monthsToModify > 1 ? 'mis à jour' : 'mis à jour'}.`);
+        } else {
+          toast.success("Année complète enregistrée !");
+        }
       }
       qc.invalidateQueries();
     },
@@ -482,12 +506,54 @@ function SaisieAnnuelle({ agencyId, year }: { agencyId: string, year: number }) 
     }
   };
 
+  // Calcul des aperçus pour le mode "Ajouter"
+  const previews = useMemo(() => {
+    if (mode !== "add" || !existing) return null;
+    return rows.map((r, i) => {
+      const ex = existing.find(x => x.month === i + 1);
+      if (!ex) return null;
+      return {
+        cc: { old: ex.cc || 0, new: Number(r.cc) || 0, total: (ex.cc || 0) + (Number(r.cc) || 0) },
+        ce: { old: ex.ce || 0, new: Number(r.ce) || 0, total: (ex.ce || 0) + (Number(r.ce) || 0) },
+        pm: { old: ex.pm || 0, new: Number(r.pm) || 0, total: (ex.pm || 0) + (Number(r.pm) || 0) },
+      };
+    });
+  }, [mode, rows, existing]);
+
   if (isLoading) return <div className="py-10 text-center text-sm text-muted-foreground">Chargement...</div>;
 
   const totalGlobal = rows.reduce((acc, r) => acc + (Number(r.cc)||0) + (Number(r.ce)||0) + (Number(r.pm)||0), 0);
+  
+  // Calculer le nombre de mois qui seront modifiés en mode "add"
+  const monthsToModify = mode === "add" 
+    ? rows.filter((r, i) => {
+        const ex = existing?.find(x => x.month === i + 1);
+        return ex && ((Number(r.cc) || 0) > 0 || (Number(r.ce) || 0) > 0 || (Number(r.pm) || 0) > 0);
+      }).length
+    : 0;
 
   return (
     <div className="space-y-4">
+      {/* Sélecteur de mode */}
+      <div className="rounded-lg border bg-card p-4">
+        <Label className="mb-3 block text-sm font-semibold">Mode de saisie</Label>
+        <RadioGroup value={mode} onValueChange={(v) => setMode(v as "replace" | "add")} className="flex gap-4">
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="replace" id="mode-replace" />
+            <Label htmlFor="mode-replace" className="cursor-pointer font-normal">Remplacer les données</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="add" id="mode-add" />
+            <Label htmlFor="mode-add" className="cursor-pointer font-normal">Ajouter aux données existantes</Label>
+          </div>
+        </RadioGroup>
+        {mode === "add" && (
+          <div className="mt-3 rounded-md border border-sky-300 bg-sky-50 px-3 py-2 text-xs text-sky-800 dark:border-sky-700 dark:bg-sky-950 dark:text-sky-200">
+            🔄 Mode ajout actif : les valeurs saisies seront additionnées aux données existantes
+          </div>
+        )}
+      </div>
+
       {hasDraft && (
         <div className="rounded-md border border-sky-300 bg-sky-50 px-3 py-2 text-xs text-sky-800 dark:border-sky-700 dark:bg-sky-950 dark:text-sky-200">
           Brouillon chargé. <button className="underline cursor-pointer" onClick={resetForm}>Annuler</button>
@@ -508,18 +574,35 @@ function SaisieAnnuelle({ agencyId, year }: { agencyId: string, year: number }) 
           <tbody>
             {MONTHS_FR.map((m, i) => {
               const r = rows[i];
+              const preview = previews?.[i];
               const rowTotal = (Number(r.cc)||0) + (Number(r.ce)||0) + (Number(r.pm)||0);
+              const hasPreview = mode === "add" && preview;
               return (
                 <tr key={m} className="border-t hover:bg-muted/20">
                   <td className="px-3 py-1.5 font-medium text-xs sm:text-sm">{m.slice(0, 3)}</td>
-                  <td className="px-1 py-1.5">
+                  <td className={`px-1 py-1.5 ${hasPreview && preview.cc.old > 0 ? 'bg-green-50 dark:bg-green-950/20' : ''}`}>
                     <Input className="h-8 text-center px-1 text-xs" inputMode="numeric" pattern="[0-9]*" value={r.cc} onChange={e => updateRow(i, "cc", e.target.value.replace(/\D/g, ""))} />
+                    {hasPreview && preview.cc.old > 0 && (
+                      <div className="mt-0.5 text-[10px] text-muted-foreground text-center">
+                        {preview.cc.old} + {preview.cc.new} = {preview.cc.total}
+                      </div>
+                    )}
                   </td>
-                  <td className="px-1 py-1.5">
+                  <td className={`px-1 py-1.5 ${hasPreview && preview.ce.old > 0 ? 'bg-green-50 dark:bg-green-950/20' : ''}`}>
                     <Input className="h-8 text-center px-1 text-xs" inputMode="numeric" pattern="[0-9]*" value={r.ce} onChange={e => updateRow(i, "ce", e.target.value.replace(/\D/g, ""))} />
+                    {hasPreview && preview.ce.old > 0 && (
+                      <div className="mt-0.5 text-[10px] text-muted-foreground text-center">
+                        {preview.ce.old} + {preview.ce.new} = {preview.ce.total}
+                      </div>
+                    )}
                   </td>
-                  <td className="px-1 py-1.5">
+                  <td className={`px-1 py-1.5 ${hasPreview && preview.pm.old > 0 ? 'bg-green-50 dark:bg-green-950/20' : ''}`}>
                     <Input className="h-8 text-center px-1 text-xs" inputMode="numeric" pattern="[0-9]*" value={r.pm} onChange={e => updateRow(i, "pm", e.target.value.replace(/\D/g, ""))} />
+                    {hasPreview && preview.pm.old > 0 && (
+                      <div className="mt-0.5 text-[10px] text-muted-foreground text-center">
+                        {preview.pm.old} + {preview.pm.new} = {preview.pm.total}
+                      </div>
+                    )}
                   </td>
                   <td className="px-3 py-1.5 text-right font-semibold tabular-nums text-muted-foreground text-xs">{rowTotal.toLocaleString("fr-FR")}</td>
                 </tr>
@@ -537,9 +620,40 @@ function SaisieAnnuelle({ agencyId, year }: { agencyId: string, year: number }) 
 
       <div className="flex justify-end gap-2 pt-2">
         {hasDraft && <Button variant="outline" onClick={resetForm} disabled={save.isPending}>Réinitialiser</Button>}
-        <Button onClick={() => save.mutate()} disabled={save.isPending || !agencyId}>
-          {save.isPending ? "Enregistrement en cours..." : "Enregistrer l'année"}
-        </Button>
+        
+        {mode === "add" ? (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button disabled={save.isPending || !agencyId}>
+                {save.isPending ? "Enregistrement en cours..." : "Ajouter aux données existantes"}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Confirmer l'ajout</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Vous allez ajouter ces valeurs aux données existantes. 
+                  {monthsToModify > 0 ? (
+                    <> <strong>{monthsToModify} mois</strong> seront modifiés.</>
+                  ) : (
+                    <> Aucune donnée existante ne sera modifiée (nouveaux mois uniquement).</>
+                  )}
+                  {" "}Cette action est irréversible.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                <AlertDialogAction onClick={() => save.mutate()}>
+                  Confirmer l'ajout
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        ) : (
+          <Button onClick={() => save.mutate()} disabled={save.isPending || !agencyId}>
+            {save.isPending ? "Enregistrement en cours..." : "Enregistrer l'année"}
+          </Button>
+        )}
       </div>
     </div>
   );
