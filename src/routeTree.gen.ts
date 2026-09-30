@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAgencesRouteImport } from './routes/_authenticated/agences'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedRapportsRouteImport } from './routes/_authenticated/rapports'
 import { Route as AuthenticatedSaisieRouteImport } from './routes/_authenticated/saisie'
 import { Route as AuthenticatedStatistiquesRouteImport } from './routes/_authenticated/statistiques'
 import { Route as AuthenticatedTableauRouteImport } from './routes/_authenticated/tableau'
@@ -41,6 +42,11 @@ const AuthenticatedAgencesRoute = AuthenticatedAgencesRouteImport.update({
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRapportsRoute = AuthenticatedRapportsRouteImport.update({
+  id: '/rapports',
+  path: '/rapports',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSaisieRoute = AuthenticatedSaisieRouteImport.update({
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/agences': typeof AuthenticatedAgencesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/rapports': typeof AuthenticatedRapportsRoute
   '/saisie': typeof AuthenticatedSaisieRoute
   '/statistiques': typeof AuthenticatedStatistiquesRoute
   '/tableau': typeof AuthenticatedTableauRoute
@@ -81,6 +88,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/agences': typeof AuthenticatedAgencesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/rapports': typeof AuthenticatedRapportsRoute
   '/saisie': typeof AuthenticatedSaisieRoute
   '/statistiques': typeof AuthenticatedStatistiquesRoute
   '/tableau': typeof AuthenticatedTableauRoute
@@ -93,6 +101,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/agences': typeof AuthenticatedAgencesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/rapports': typeof AuthenticatedRapportsRoute
   '/_authenticated/saisie': typeof AuthenticatedSaisieRoute
   '/_authenticated/statistiques': typeof AuthenticatedStatistiquesRoute
   '/_authenticated/tableau': typeof AuthenticatedTableauRoute
@@ -105,6 +114,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/agences'
     | '/dashboard'
+    | '/rapports'
     | '/saisie'
     | '/statistiques'
     | '/tableau'
@@ -115,6 +125,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/agences'
     | '/dashboard'
+    | '/rapports'
     | '/saisie'
     | '/statistiques'
     | '/tableau'
@@ -126,6 +137,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/agences'
     | '/_authenticated/dashboard'
+    | '/_authenticated/rapports'
     | '/_authenticated/saisie'
     | '/_authenticated/statistiques'
     | '/_authenticated/tableau'
@@ -175,6 +187,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/rapports': {
+      id: '/_authenticated/rapports'
+      path: '/rapports'
+      fullPath: '/rapports'
+      preLoaderRoute: typeof AuthenticatedRapportsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/saisie': {
       id: '/_authenticated/saisie'
       path: '/saisie'
@@ -209,6 +228,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAgencesRoute: typeof AuthenticatedAgencesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedRapportsRoute: typeof AuthenticatedRapportsRoute
   AuthenticatedSaisieRoute: typeof AuthenticatedSaisieRoute
   AuthenticatedStatistiquesRoute: typeof AuthenticatedStatistiquesRoute
   AuthenticatedTableauRoute: typeof AuthenticatedTableauRoute
@@ -218,6 +238,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAgencesRoute: AuthenticatedAgencesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedRapportsRoute: AuthenticatedRapportsRoute,
   AuthenticatedSaisieRoute: AuthenticatedSaisieRoute,
   AuthenticatedStatistiquesRoute: AuthenticatedStatistiquesRoute,
   AuthenticatedTableauRoute: AuthenticatedTableauRoute,

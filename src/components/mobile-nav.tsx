@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, PencilLine, Building2, BarChart3, Table, Users, MoreHorizontal, ChevronRight } from "lucide-react";
+import { LayoutDashboard, PencilLine, Building2, BarChart3, Table, Users, MoreHorizontal, ChevronRight, CalendarDays } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
@@ -31,6 +31,7 @@ export function MobileNav() {
     { url: "/saisie", icon: PencilLine, label: "Saisie" },
     { url: "/tableau", icon: Table, label: "Annuel" },
     { url: "/statistiques", icon: BarChart3, label: "Stats" },
+    { url: "/rapports", icon: CalendarDays, label: "Rapports" },
   ];
   const admin = role === "admin"
     ? [

@@ -48,3 +48,13 @@ src-tauri/icons/StoreLogo.png
 *.njsproj
 *.sln
 *.sw?
+
+# Android APK builds
+*.apk
+*.aab
+
+# Test files
+test-*.js
+
+# Shortcuts
+*.lnk

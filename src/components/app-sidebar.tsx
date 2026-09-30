@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, PencilLine, Building2, BarChart3, Table, LogOut, Users } from "lucide-react";
+import { LayoutDashboard, PencilLine, Building2, BarChart3, Table, LogOut, Users, CalendarDays } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -25,6 +25,7 @@ export function AppSidebar() {
     { title: "Saisie mensuelle", url: "/saisie", icon: PencilLine },
     { title: "Tableau annuel", url: "/tableau", icon: Table },
     { title: "Statistiques", url: "/statistiques", icon: BarChart3 },
+    { title: "Rapports", url: "/rapports", icon: CalendarDays },
     ...(role === "admin"
       ? [
           { title: "Agences", url: "/agences", icon: Building2 },
