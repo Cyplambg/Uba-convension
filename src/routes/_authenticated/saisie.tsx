@@ -363,6 +363,25 @@ function SaisieAnnuelle({ agencyId, year }: { agencyId: string; year: number }) 
   const [quickCe, setQuickCe] = useState("");
   const [quickPm, setQuickPm] = useState("");
 
+  const { data: existing, isLoading } = useQuery({
+    queryKey: ["conv_annual", agencyId, year],
+    enabled: !!agencyId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("conventions")
+        .select("month, cc, ce, pm")
+        .eq("agency_id", agencyId)
+        .eq("year", year);
+      return data ?? [];
+    },
+  });
+
+  // Fixed: use Array.from to create independent row objects (Array.fill shares references)
+  const emptyRows = () => Array.from({ length: 12 }, () => ({ cc: "", ce: "", pm: "" }));
+
+  const [rows, setRows] = useState(emptyRows);
+  const [hasDraft, setHasDraft] = useState(false);
+
   // Effect pour vider les champs quand on passe en mode "add"
   // et recharger les données quand on revient en mode "replace"
   useEffect(() => {
@@ -388,25 +407,6 @@ function SaisieAnnuelle({ agencyId, year }: { agencyId: string; year: number }) 
       setHasDraft(false);
     }
   }, [mode, draftKey, existing]);
-
-  const { data: existing, isLoading } = useQuery({
-    queryKey: ["conv_annual", agencyId, year],
-    enabled: !!agencyId,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("conventions")
-        .select("month, cc, ce, pm")
-        .eq("agency_id", agencyId)
-        .eq("year", year);
-      return data ?? [];
-    },
-  });
-
-  // Fixed: use Array.from to create independent row objects (Array.fill shares references)
-  const emptyRows = () => Array.from({ length: 12 }, () => ({ cc: "", ce: "", pm: "" }));
-
-  const [rows, setRows] = useState(emptyRows);
-  const [hasDraft, setHasDraft] = useState(false);
 
   useEffect(() => {
     let loadedDraft = false;
